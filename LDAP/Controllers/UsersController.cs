@@ -1,5 +1,12 @@
 ﻿using LDAP.Context;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using LDAP.Models;
+using LDAP.Interface;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,42 +16,77 @@ namespace LDAP.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        // GET: api/<Users>
-        //[HttpGet]
-        //public IEnumerable<string> Get()
-        //{
-        //    return new string[] { "value1", "value2" };
-        //}
-
-        //// GET api/<Users>/5
-        //[HttpGet("{id}")]
-        //public string Get(int id)
-        //{
-        //    return "value";
-        //}
-
-        //// POST api/<Users>
-        //[HttpPost]
-        //public void Post([FromBody] string value)
-        //{
-        //}
-
-        //// PUT api/<Users>/5
-        //[HttpPut("{id}")]
-        //public void Put(int id, [FromBody] string value)
-        //{
-        //}
-
-        //// DELETE api/<Users>/5
-        //[HttpDelete("{id}")]
-        //public void Delete(int id)
-        //{
-        //}
-        private readonly LDAPContext _ldapContext;
-        public UsersController(LDAPContext ldapContext)
+       
+        private readonly Interface1 _context;
+        public UsersController(Interface1 Context)
         {
-            _ldapContext = ldapContext;
+            _context = Context;
         }
+        [HttpGet("external")]
+        public async Task<IActionResult> YourAction()
+        {
+            try
+            {
+                var apiUrl = "https://auth.hungaria.koerber.de/AllUsers/get-all";
 
+                using (var handler = new HttpClientHandler
+                {
+                    UseDefaultCredentials = true,
+                    Credentials = CredentialCache.DefaultCredentials
+                })
+                using (var httpClient = new HttpClient(handler))
+                {
+                    var response = await httpClient.GetAsync(apiUrl);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync();
+
+                        // String deszerializálása
+                        var users = JsonConvert.DeserializeObject<List<User>>(responseContent);
+
+                        // Az adatok feldolgozása vagy visszaadása
+                        return Ok(users);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"HTTP hiba: {response.StatusCode}");
+                        return StatusCode((int)response.StatusCode, "Hiba történt az API hívás során.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Hiba történt: {ex.Message}");
+                return StatusCode(500, "Belső szerverhiba.");
+            }
+        }
+        [HttpGet("GetAll")]
+        public IActionResult GetAllUsers()
+        {
+            var getall = _context.GetAllUsers();
+            return Ok(getall);
+        }
+        [HttpGet("GetUser")]
+        public IActionResult GetUser(string accountName)
+        {
+            var getuser = _context.GetUser(accountName);
+            return Ok(getuser);
+
+        }
     }
+
+    public class User
+    {
+        
+        public string Name { get; set; }
+        public string sAMAccountName { get; set; }
+        public string department { get; set; }
+        public string mail { get; set; }
+        public string extensionAttribute { get; set; }
+        public string manager { get; set; }
+    }
+    
+
 }
+
