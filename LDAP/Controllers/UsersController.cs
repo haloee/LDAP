@@ -23,43 +23,51 @@ namespace LDAP.Controllers
             _context = Context;
         }
         [HttpGet("external")]
-        public async Task<IActionResult> YourAction()
+        //public async Task<IActionResult> YourAction()
+        //{
+        //    try
+        //    {
+        //        var apiUrl = "https://auth.hungaria.koerber.de/AllUsers/get-all";
+
+        //        using (var handler = new HttpClientHandler
+        //        {
+        //            UseDefaultCredentials = true,
+        //            Credentials = CredentialCache.DefaultCredentials
+        //        })
+        //        using (var httpClient = new HttpClient(handler))
+        //        {
+        //            var response = await httpClient.GetAsync(apiUrl);
+
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                var responseContent = await response.Content.ReadAsStringAsync();
+        //                var users = JsonConvert.DeserializeObject<List<ExUsers>>(responseContent);
+        //                return Ok(users);
+        //            }
+        //            else
+        //            {
+        //                // Return the HTTP status code and a message
+        //                return StatusCode((int)response.StatusCode, $"Error occurred during API call. StatusCode: {response.StatusCode}");
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Return a 500 Internal Server Error with a message
+        //        return StatusCode(500, $"Internal server error: {ex.Message}");
+        //    }
+        //}
+        public async Task<IActionResult> GetExUs()
         {
-            try
-            {
-                var apiUrl = "https://auth.hungaria.koerber.de/AllUsers/get-all";
-
-                using (var handler = new HttpClientHandler
-                {
-                    UseDefaultCredentials = true,
-                    Credentials = CredentialCache.DefaultCredentials
-                })
-                using (var httpClient = new HttpClient(handler))
-                {
-                    var response = await httpClient.GetAsync(apiUrl);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseContent = await response.Content.ReadAsStringAsync();
-
-                        // String deszerializálása
-                        var users = JsonConvert.DeserializeObject<List<User>>(responseContent);
-
-                        // Az adatok feldolgozása vagy visszaadása
-                        return Ok(users);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"HTTP hiba: {response.StatusCode}");
-                        return StatusCode((int)response.StatusCode, "Hiba történt az API hívás során.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Hiba történt: {ex.Message}");
-                return StatusCode(500, "Belső szerverhiba.");
-            }
+            HttpClientHandler httpClientHandler = new HttpClientHandler();
+            httpClientHandler.UseDefaultCredentials = true;
+            HttpClient httpClient = new HttpClient(httpClientHandler);
+            HttpResponseMessage httpResponseMessage = await httpClient.GetAsync("https://auth.hungaria.koerber.de/AllUsers/get-all");
+            var Json= await httpResponseMessage.Content.ReadAsStringAsync();
+            ExList exlist=JsonConvert.DeserializeObject<ExList>(Json);
+            httpClientHandler.Dispose();
+            httpClient.Dispose();
+            return Ok(exlist);
         }
         [HttpGet("GetAll")]
         public IActionResult GetAllUsers()

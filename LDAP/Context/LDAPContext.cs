@@ -27,49 +27,6 @@ namespace LDAP.Context
         }
 
         
-
-        public void SearchLDAP(string accountName)
-        {
-            string[] propertiesToLoad = { "displayName", "sAMAccountName", "department", "mail", "extensionAttribute", "manager" };
-
-            try
-            {
-                using (var searcher = new DirectorySearcher(ldapConnection, $"(&(objectCategory=User)(sAMAccountName={accountName}))"))
-                {
-                    searcher.PropertiesToLoad.AddRange(propertiesToLoad);
-
-                    // Execute the search
-                    SearchResultCollection results = searcher.FindAll();
-
-                    // Process the results
-                    foreach (SearchResult result in results)
-                    {
-                        ProcessSearchResult(result, propertiesToLoad);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error occurred: {ex.Message}");
-            }
-        }
-
-
-        private void ProcessSearchResult(SearchResult result, string[] propertiesToLoad)
-        {
-            Console.WriteLine("-----");
-            foreach (string property in propertiesToLoad)
-            {
-                if (result.Properties.Contains(property))
-                {
-                    Console.WriteLine($"{property}: {result.Properties[property][0]}");
-                }
-                else
-                {
-                    Console.WriteLine($"{property}: Nincs találat");
-                }
-            }
-        }
         public List<Users> GetAllUsers()
         {
             SearchResultCollection results;
